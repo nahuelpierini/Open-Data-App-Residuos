@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa con Marcadores desde CSV</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lora&display=swap" rel="stylesheet">
+    <style>
+        #map {
+            height: 500px;
+        }
+    
+        .leaflet-div-icon-gray {
+            background: gray;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            margin-left: -6px;
+            margin-top: -6px;
+        }
+    
+        .leaflet-div-icon-green {
+            background: green;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            margin-left: -6px;
+            margin-top: -6px;
+        }
+    
+        .leaflet-div-icon-brown {
+            background: #2e1d1d; /* Nuevo color para pilas */
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            margin-left: -6px;
+            margin-top: -6px;
+        }
+
+        .leaflet-div-icon-yellow {
+            background: yellow;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            margin-left: -6px;
+            margin-top: -6px;
+        }
+        .leaflet-div-icon-orange {
+            background: orange;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            margin-left: -6px;
+            margin-top: -6px;
+        }
+        .leaflet-div-icon-blue {
+            background: blue;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            margin-left: -6px;
+            margin-top: -6px;
+        }
+        .leaflet-div-icon-white {
+            background: rgb(234, 0, 255);
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            margin-left: -6px;
+            margin-top: -6px;
+        }
+        .leaflet-div-icon-black {
+            background: black;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            margin-left: -6px;
+            margin-top: -6px;
+        }
+        .leaflet-div-icon-lightblue {
+            background: lightblue;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            margin-left: -6px;
+            margin-top: -6px;
+        }
+
+    
+        #toggleSwitchVidrio{
+            position: absolute;
+            top: 4%;
+            left: 90%;
+            z-index: 1000;
+        }
+        #toggleSwitchPilas {
+            position: absolute;
+            top: 8%;
+            left: 90%;
+            z-index: 1000;
+        }
+        #toggleSwitchEnvases {
+            position: absolute;
+            top: 12%;
+            left: 90%;
+            z-index: 1000;
+        }
+        #toggleSwitchAceites {
+            position: absolute;
+            top: 16%;
+            left: 90%;
+            z-index: 1000;
+        }
+        #toggleSwitchPapelCarton {
+            position: absolute;
+            top: 20%;
+            left: 90%;
+            z-index: 1000;
+        }
+        #toggleSwitchRopa {
+            position: absolute;
+            top: 24%;
+            left: 90%;
+            z-index: 1000;
+        }
+        #toggleSwitchRSU {
+            position: absolute;
+            top: 28%;
+            left: 90%;
+            z-index: 1000;
+        }
+        #toggleSwitchRI {
+            position: absolute;
+            top: 36%;
+            left: 90%;
+            z-index: 1000;
+        }
+
+        #btnShowLocation{
+            position: absolute;
+            top: 4%;
+            left: 5%;
+            z-index: 1000;
+        }
+
+        body {
+            background-color: white;
+            padding-left: 20%;
+            padding-right: 20%;
+            padding-top: 1%;
+            padding-bottom: 2%;
+
+        }
+
+        h1 {
+            font-family: 'Lora', serif;
+            color: #464646;
+            text-align: center;
+            font-size: 45px; /* Ajusta el tamaño según tus preferencias */
+            margin-bottom: 20px; /* Espacio inferior */
+        }
+
+
+        h2 {
+            font-family: 'Lora', serif;
+            color: #464646;
+            text-align: center;
+        }
+
+
+
+        .contenedor {
+            display: flex; /* Utilizamos flexbox para distribuir los elementos horizontalmente */
+            align-items: center; /* Centramos verticalmente los elementos */
+            padding: 20px; /* Ajusta según sea necesario */
+        }
+
+        /* Estilo para ajustar el tamaño de la imagen */
+        .imagen img {
+            width: 100%; /* La imagen ocupará el 100% del ancho disponible en su contenedor */
+            height: auto; /* La altura se ajusta automáticamente para mantener la proporción original */
+            max-width: 200px; /* Ajusta el tamaño máximo según tus necesidades */
+        }
+
+        .descripcion {
+            flex: 1; /* La descripción ocupará el 50% del espacio disponible */
+            font-family: 'Lora', serif;
+            color: #464646;
+            padding-left: 2%;
+            text-align: justify;
+
+        }
+
+        footer {
+            text-align: center;
+            color: #333; /* Gris oscuro */
+            font-family: 'Lora', serif;
+            font-size: 16px;
+            margin-top: 20px; /* Espacio superior */
+        }
+
+    </style>
+</head>
+<body>
+    <h1>GESTIÓN DE RESIDUOS EN LA CIUDAD DE MÁLAGA</h1>
+    <div class="contenedor">
+        <div class="descripcion">
+            <h3>¿Qué debo deposotar en el contenedor AMARILLO?</h3>
+            <p>
+                ENVASES DE PLÁSTICO: botellas y garrafas de agua, de refrescos, de aceite; aros que sujetan los packs de latas; envases de yogur, de mantequilla; bandejas de “corcho blanco”; botes de productos de limpieza, detergentes líquidos; envases de cosméticos, gel, champú, cremas,: tapas y tapones de plástico; etc.
+                BOLSAS DE PLÁSTICO: bolsas de comercios y envoltorios, papel film (aluminio), envases tipo blister,  etc.
+                ENVASES TIPO BRIK: de leche, zumo, vino, aceite, etc.
+                ENVASES METÁLICOS: latas de bebidas, botes de conserva, aerosoles, bandejas y papel de aluminio, chapas y tapas metálicas, etc.
+            </p>
+                <h3>¿Qué no debo depositar en el contenedor AMARILLO?</h3>
+            <p>
+                Envases de vidrio, cartón, periódicos, revistas, juguetes de plástico, biberones, guantes de goma, utensilios de cocina, pequeños electrodomésticos, cajas de fruta, cubos de plástico, etc.
+                Cualquier objeto de plástico que no sea un envase o que no forme parte de un embalaje.
+            </p>
+                <h3>Buenas Prácticas</h3>
+            <p>
+                Aplasta tus envases. Las garrafas, botellas, latas y briks ocupan un gran volumen. Recuerda aplastar los envases antes de depositarlos en en contenedor, ocuparán menos espacio y cabrán más. Con esta simple acción podremos aprovechar al máximo la capacidad de éstos contenedores, doblando prácticamente la cantidad de residuos que soportan, y evitarmos molestos rebosos.
+                Las bolsas de plástico en las que transportamos el vidrio y los periódicos hasta sus contenedores específicos (verde y azul) deben ir después al contenedor amarillo.
+                Procura reutilizar las bolsas de plástico en tus compras y, cuando ya no te sirvan, utilízalas como bolsa de basura.
+            </p>
+        </div>
+        <div class="imagen">
+            <img src="imagen/envase.png" alt="Contenedor envase">
+        </div>
+    </div>
+    <div class="contenedor">
+        <div class="imagen">
+            <img src="imagen/papel.png" alt="Contenedor papel">
+        </div>
+        <div class="descripcion">
+            <h3>¿Qué debo deposotar en el contenedor AZUL?</h3>
+            <p>
+                Folios, libretas, periódicos, revistas, papel de regalo y de envolver, sobres (sin ventanilla), folletos de publicidad.
+                Cajas, piezas de cartón y envases (de cereales, galletas, comidas pre-cocinadas y congeladas, comida rápida, zapatos, etc.).
+                Hueveras de cartón, tubos de cartón del papel higiénico o de las servilletas de cocina.
+            </p>
+                <h3>¿Qué no debo depositar en el contenedor AZUL?</h3>
+            <p>
+                Papel manchado de grasas u otros residuos.
+                Papel plastificado, encerado o parafinado, adhesivo o con restos de pegamento, papel autocopiativo o papel carbón, de fax o fotográfico.
+                Pañuelos, toallas de papel, pañales y productos de higiene íntima usados.
+                Briks o bolsas de plástico, platos y vasos de usar y tirar, bandejas de corcho blanco.
+            </p>
+                <h3>Buenas Prácticas</h3>
+            <p>
+                Procura doblar o cortar bien los papeles y cartones antes de depositarlos en el contenedor. Te resultará más fácil y cómodo introducirlos en el contenedor y ocuparán menos espacio dentro del mismo.
+                Intenta reutilizar bolsas de papel/cartón para guardar en casa este tipo de residuos. De este modo, cuando vayas a depositarlos en el contenedor no tendrás que sacarlo de la bolsa y lo podrás depositar todo junto.
+                No dejes cajas de cartón sin desmontar al pie del contenedor, no te supone nada desarmarlas o aplastarlas e introducirla en el contenedor.
+            </p>
+        </div>
+    </div>
+    <div class="contenedor">
+        <div class="descripcion">
+            <h3>¿Qué debo deposotar en el contenedor VERDE?</h3>
+            <p>
+                Botellas y botes de vidrio (zumos, refrescos, vinos, licores, sidras, salsas, aceite, etc.).
+                Tarros y frascos de vidrio (tanto de bebidas y alimentos en conserva, como de perfumes, colonias, etc.).
+            </p>
+                <h3>¿Qué no debo depositar en el contenedor VERDE?</h3>
+            <p>
+                Tapas, tapones y pulverizadores de los envases depositados (metal, plástico, corcho).
+                Vidrio plano (ventanas, lunas de coches, espejos), vidrio de pantalla (televisores, ordenadores, etc.).
+                Vasos, copas, cristalerías de mesa (contienen óxido de plomo), vajillas, cerámicas, porcelanas, ladrillos y piedras.
+                Vidrios decorados, vidrios opacos.
+                Vidrios de farmacia (frascos de medicamentos, inyecciones, etc.).
+                Vidrios de lentes y microscopios.
+                Los cristales rotos, espejos, cualquier objeto de loza o porcelana, cristal líquido, etc., aunque se parezcan al vidrio no deben ir al contenedor verde.
+            </p>
+                <h3>Buenas Prácticas</h3>
+            <p>
+                Procura vaciar bien los envases, así no gotearan ni mancharán.
+                Las bolsas de plástico en las que transportamos el vidrio hasta su contenedor específico (verde) deben ir después al contenedor amarillo.
+                Procura hacer uso de envases de vidrio retornable en aquellos productos en los que esté disponible, como por ejemplo en el agua, ya que te saldrá mas barato, y te evitará acumular envases en casa (plástico) y desplazarte al contenedor.
+            </p>
+        </div>
+        <div class="imagen">
+            <img src="imagen/vidrio.png" alt="Contenedor vidrio">
+        </div>
+    </div>
+    <div class="contenedor">
+        <div class="imagen">
+            <img src="imagen/residuos_urbanos.png" alt="Contenedor residuos urbanos">
+        </div>
+        <div class="descripcion">
+            <h3>¿Qué debo deposotar en el contenedor GRIS?</h3>
+            <p>
+                Restos de alimentos
+                Restos (domésticos) de plantas y hojas
+                Productos elaborados con materiales orgánicos como los tapones de corcho
+                Fracción resto (residuos para los que no exista un contenedore específico en la vía pública, salvo los especificados en el siguiente apartado).
+            </p>
+                <h3>¿Qué no debo depositar en el contenedor GRIS?</h3>
+            <p>
+                Envases de papel-cartón (contenedor azul)
+                Envases de vidrio (contenedor verde)
+                Envases de plástico, latas o briks (contenedor amarillo)
+                Este tipo de residuos deberá depositarse en los contenedores de recogida selectiva (azul, verde y amarillo)
+                
+                Tampoco deben depositarse residuos como:
+                
+                Aceite de cocina
+                Cenizas, líquidos tóxicos o inflamables
+                Bombillas, cables pequeños electrodomésticos, pilas
+                Clavos, alambres, llaves, cristales, perchas
+                Neumáticos, repuestos y baterías de coche
+                Cualquier otro residuo que no tenga origen orgánico
+            </p>
+        </div>
+    </div>
+    <div><h2>BUSQUE SU CONTENEDOR MÁS CERCANO</h2></div>
+    <div id="map">
+        <div id="toggleSwitchVidrio">
+            <input type="checkbox" id="toggleCheckboxVidrio" checked>
+            <label for="toggleCheckboxVidrio">Vidrio</label>
+        </div>
+        <div id="toggleSwitchPilas">
+            <input type="checkbox" id="toggleCheckboxPilas" checked>
+            <label for="toggleCheckboxPilas">Pilas</label>
+        </div>
+        <div id="toggleSwitchEnvases">
+            <input type="checkbox" id="toggleCheckboxEnvases" checked>
+            <label for="toggleCheckboxEnvases">Envases</label>
+        </div>
+        <div id="toggleSwitchAceites">
+            <input type="checkbox" id="toggleCheckboxAceites" checked>
+            <label for="toggleCheckboxAceites">Aceites</label>
+        </div>
+        <div id="toggleSwitchPapelCarton">
+            <input type="checkbox" id="toggleCheckboxPapelCarton" checked>
+            <label for="toggleCheckboxPapelCarton">Papel y Cartón</label>
+        </div>
+        <div id="toggleSwitchRopa">
+            <input type="checkbox" id="toggleCheckboxRopa" checked>
+            <label for="toggleCheckboxRopa">Ropa</label>
+        </div>
+        <div id="toggleSwitchRSU">
+            <input type="checkbox" id="toggleCheckboxRSU" checked>
+            <label for="toggleCheckboxRSU">Residuos Sólidos Urbanos</label>
+        </div>
+        <div id="toggleSwitchRI">
+            <input type="checkbox" id="toggleCheckboxRI" checked>
+            <label for="toggleCheckboxRI">Residuos Industriales</label>
+        </div>
+        <button id="btnShowLocation">Mostrar Ubicación</button>
+    </div>
+
+    <footer>
+        <p>© 2024 Ciudad de Málaga - Gestión de Residuos - Nahuel Pierini</p>
+    </footer>
+
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var map = L.map('map').setView([36.722367, -4.416534], 15);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap contributors, &copy; CartoDB'
+            }).addTo(map);
+
+            var markerLayerVidrio = L.layerGroup().addTo(map);
+                        
+            var markerLayerEnvases = L.layerGroup().addTo(map);
+            var markerLayerPilas = L.layerGroup().addTo(map);
+            var markerLayerAceites = L.layerGroup().addTo(map);
+            var markerLayerPapelCarton = L.layerGroup().addTo(map);
+            var markerLayerRopa = L.layerGroup().addTo(map);
+            var markerLayerRSU = L.layerGroup().addTo(map);
+            var markerLayerRI = L.layerGroup().addTo(map);
+            
+
+
+            function addMarkersFromCSV(csvPath, markerLayer, markerColor, markerTitle) {
+                Papa.parse(csvPath, {
+                    header: true,
+                    download: true,
+                    dynamicTyping: true,
+                    complete: function (results) {
+                        results.data.forEach(function (contenedor, index) {
+                            var lat, lon;
+
+                            if (contenedor.lat && contenedor.lon) {
+                                lat = contenedor.lat;
+                                lon = contenedor.lon;
+                            } else if (contenedor.geometry && contenedor.geometry.coordinates) {
+                                lat = contenedor.geometry.coordinates[1];
+                                lon = contenedor.geometry.coordinates[0];
+                            } else {
+                                console.error('Formato de archivo no reconocido:', contenedor);
+                                return;
+                            }
+
+                            var iconClassName = markerColor ? 'leaflet-div-icon-' + markerColor : 'leaflet-div-icon-gray';
+
+                            var marker = L.marker([lat, lon], {
+                                icon: L.divIcon({
+                                    className: iconClassName,
+                                    iconSize: [9, 9],
+                                    iconAnchor: [5, 5]
+                                })
+                            }).addTo(markerLayer);
+
+                            marker.on('click', function () {
+                                // Obtener la dirección solo cuando se hace clic en el marcador
+                                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        var direccion = data.display_name || 'No se pudo obtener la dirección.';
+                                        marker.bindPopup('<b>' + markerTitle + '</b><br>' + '<br>Dirección: ' + direccion).openPopup();
+                                    })
+                                    .catch(error => {
+                                        console.error('Error al obtener la dirección:', error);
+                                        marker.bindPopup('<b>' + markerTitle + '</b><br>' + '<br>Error al obtener la dirección.').openPopup();
+                                    });
+                            });
+                        });
+                    }
+                });
+            }
+
+            addMarkersFromCSV('csv/vidrio.csv', markerLayerVidrio, 'green', 'VIDRIO');
+            addMarkersFromCSV('csv/envases.csv', markerLayerEnvases, 'yellow', 'ENVASES');
+            addMarkersFromCSV('csv/pilas.csv', markerLayerPilas, 'brown', 'PILAS');
+            addMarkersFromCSV('csv/aceites.csv', markerLayerAceites, 'orange', 'ACEITES');
+            addMarkersFromCSV('csv/papel_carton.csv', markerLayerPapelCarton, 'blue', 'PAPEL Y CARTÓN');
+            addMarkersFromCSV('csv/ropa.csv', markerLayerRopa, 'white', 'ROPA');
+            //addMarkersFromCSV('csv/residuos_solidos_urbanos.csv', markerLayerRSU, 'black', 'RESIDUOS SÓLIDOS URBANOS');
+            addMarkersFromCSV('csv/residuos_industriales.csv', markerLayerRI, 'lightblue', 'RESIDUOS INDUSTRIALES');
+            
+
+
+            var toggleSwitchVidrio = document.getElementById('toggleCheckboxVidrio');
+            toggleSwitchVidrio.addEventListener('change', function () {
+                if (toggleSwitchVidrio.checked) {
+                    map.addLayer(markerLayerVidrio);
+                } else {
+                    map.removeLayer(markerLayerVidrio);
+                }
+            });
+            
+            var toggleSwitchPilas = document.getElementById('toggleCheckboxPilas');
+            toggleSwitchPilas.addEventListener('change', function () {
+                if (toggleSwitchPilas.checked) {
+                    map.addLayer(markerLayerPilas);
+                } else {
+                    map.removeLayer(markerLayerPilas);
+                }
+            });
+
+            var toggleSwitchEnvases = document.getElementById('toggleCheckboxEnvases');
+            toggleSwitchEnvases.addEventListener('change', function () {
+                if (toggleSwitchEnvases.checked) {
+                    map.addLayer(markerLayerEnvases);
+                } else {
+                    map.removeLayer(markerLayerEnvases);
+                }
+            });
+
+            var toggleSwitcAceites = document.getElementById('toggleCheckboxAceites');
+            toggleSwitcAceites.addEventListener('change', function () {
+                if (toggleSwitcAceites.checked) {
+                    map.addLayer(markerLayerAceites);
+                } else {
+                    map.removeLayer(markerLayerAceites);
+                }
+            });
+            var toggleSwitcPapelCarton = document.getElementById('toggleCheckboxPapelCarton');
+            toggleSwitcPapelCarton.addEventListener('change', function () {
+                if (toggleSwitcPapelCarton.checked) {
+                    map.addLayer(markerLayerPapelCarton);
+                } else {
+                    map.removeLayer(markerLayerPapelCarton);
+                }
+            });
+            var toggleSwitchRopa = document.getElementById('toggleCheckboxRopa');
+            toggleSwitchRopa.addEventListener('change', function () {
+                if (toggleSwitchRopa.checked) {
+                    map.addLayer(markerLayerRopa);
+                } else {
+                    map.removeLayer(markerLayerRopa);
+                }
+            });
+            var toggleSwitchRSU = document.getElementById('toggleCheckboxRSU');
+            toggleSwitchRSU.addEventListener('change', function () {
+                if (toggleSwitchRSU.checked) {
+                    map.addLayer(markerLayerRSU);
+                } else {
+                    map.removeLayer(markerLayerRSU);
+                }
+            });
+            var toggleSwitchRI = document.getElementById('toggleCheckboxRI');
+            toggleSwitchRI.addEventListener('change', function () {
+                if (toggleSwitchRI.checked) {
+                    map.addLayer(markerLayerRI);
+                } else {
+                    map.removeLayer(markerLayerRI);
+                }
+            });
+            
+
+            // Agrega un botón para mostrar la ubicación actual
+            var btnShowLocation = document.getElementById('btnShowLocation');
+                    btnShowLocation.addEventListener('click', function () {
+                        if (navigator.geolocation) {
+                            navigator.geolocation.getCurrentPosition(function (position) {
+                                var lat = position.coords.latitude;
+                                var lon = position.coords.longitude;
+
+                                var marker = L.marker([lat, lon]).addTo(map);
+
+                                map.setView([lat, lon], 15);
+                            }, function (error) {
+                                console.error('Error al obtener la ubicación:', error);
+                                alert('No se pudo obtener tu ubicación.');
+                            });
+                        } else {
+                            alert('La geolocalización no está soportada por tu navegador.');
+                        }
+                    });
+        });
+    </script>
+</body>
+</html>
